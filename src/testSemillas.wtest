@@ -1,0 +1,190 @@
+import semillas.*
+import parcelas.*
+import inta.*
+
+describe "tests de semillas" {
+
+	const menta1 = new Menta(altura=1, anio = 2000)
+	const menta2 = new Menta(altura=0.3, anio = 2000)
+	const hierbabuena = new Hierbabuena(altura=1, anio=2000)
+
+	const menta3 = new Menta(altura=1, anio = 2000)
+	const menta4 = new Menta(altura=1, anio = 2000)
+	const menta5 = new Menta(altura=1, anio = 2000)
+	const menta6 = new Menta(altura=1, anio = 2000)
+	const menta7 = new Menta(altura=1, anio = 2000)
+	const menta8 = new Menta(altura=1, anio = 2000)
+
+	const soja1 = new Soja(altura=0.6, anio= 2009)
+	const soja2 = new Soja(altura=2,anio=2006)
+	const soja3 = new Soja(altura=10,anio=2015)
+	const sojaTrans = new SojaTransgenica(altura=5,anio=2015)
+	const soja4 = new Soja(altura=2,anio=2015)
+
+	const quinoa1 = new Quinoa(tolerancia=12,anio=2010,altura=1)
+	const quinoa2 = new Quinoa(tolerancia=9,anio=2001,altura=1)
+	const quinoa3 = new Quinoa(tolerancia=8,anio=2001,altura=1)
+
+
+	const parcela1 = new Parcela(ancho=20,largo=1,horasDeSol=8,tipo="industrial") //para testear quinoa y menta, hasta 4 plantas, superficie 20
+
+	const parcela2 = new Parcela(ancho = 5, largo = 1, horasDeSol = 9,tipo="ecologica") //para testear soja y sojaTrans
+
+	const parcela3 = new Parcela(ancho=90000,largo=1,horasDeSol=5,tipo="ecologica")
+	
+	const parcela4 = new Parcela(ancho=90000,largo=1,horasDeSol=5,tipo="ecologica")
+
+	test "una menta de 1 metro, debería dar semillas y ocupar un espacio de 3 metros cuadrados." {
+		assert.equals(3,menta1.espacioOcupado())
+		assert.that(menta1.daNuevasSemillas())
+	}
+
+	test "una menta de solo 0.3 metros, no debería dar semillas y ocuparía 0.9 m2 de espacio." {
+		assert.equals(0.9,menta2.espacioOcupado())
+		assert.notThat(menta2.daNuevasSemillas())
+	}
+
+	test "si tuviesemos una soja de 0.6 metros y de semilla de 2009, 
+la planta tendría una tolerancia al sol de 7 horas, no daría semillas y ocuparía 0.3 m2." {
+		assert.equals(soja1.espacioOcupado(),0.3)
+		assert.equals(soja1.tolerancia(),7)
+		assert.notThat(soja1.daNuevasSemillas())
+	}
+	
+	test "si tuviesemos una soja de 2 metros y del anio 2006, no daria semillas, tendria tolerancia al sol de 9 horas y ocuparia 1 m2" {
+		assert.equals(soja2.espacioOcupado(),1)
+		assert.equals(soja2.tolerancia(),9)
+		assert.notThat(soja2.daNuevasSemillas())
+	}
+
+	test "si tenemos una quinoa que tolera 12 horas de sol y su semilla de origen es de 2010, se trata de una planta que da semillas." {
+		assert.that(quinoa1.daNuevasSemillas())
+	}
+	
+	test "si tenemos una planta que tolere 9 horas de sol pero cuya semilla de origen es de 2001, también da semillas." {
+		assert.that(quinoa2.daNuevasSemillas())
+	}
+
+	test "una soja de altura 10 y anio 2015 da semillas" {
+		assert.that(soja3.esDeObtencionReciente())
+		assert.equals(soja3.altura(),10)
+		assert.that(soja3.condicionAlternativa())
+		assert.that(soja3.daNuevasSemillas())
+	}
+	
+	test "una soja Transgenica de altura 10 y anio 2015 no da semillas" {
+		assert.notThat(sojaTrans.daNuevasSemillas())
+	}
+	
+	test "hierbabuena ocupa el doble de espacio que menta1 (ambas tienen la misma altura)" {
+		assert.equals(menta1.espacioOcupado()*2,hierbabuena.espacioOcupado())
+	}
+	
+	test "Una parcela de 20 mts. de ancho por 1 mt. 
+de largo que recibe 8 horas de sol por día, tiene una superficie de 20 m2 y la cantidad máxima de plantas que tolera es de 4." {
+	
+	assert.equals(parcela1.superficie(),20)
+	assert.equals(parcela1.maxCapacidad(),4)
+	
+	}
+	
+	test "Si a esa parcela le plantamos 4 plantas de soja de más de 1 metro (que toleran 9 horas de sol), no tendría complicaciones. 
+Si intentaramos agregar una quinta planta, se superaría la cantidad máxima y nos arrojaría un error." {
+	
+	parcela1.plantar(sojaTrans)
+	parcela1.plantar(soja2)
+	parcela1.plantar(soja3)
+	parcela1.plantar(soja4)
+	
+	assert.notThat(parcela1.tieneComplicaciones())
+	
+	assert.throwsExceptionWithMessage("No puedo plantar esta planta plantarosa ):", {parcela1.plantar(quinoa1)}  )
+	
+	}
+	
+	test "parcela1 es ideal para menta y quinoa" {
+		parcela1.plantar(quinoa1)
+		assert.that(quinoa1.parcelaIdeal())
+		parcela1.plantar(soja3)
+		assert.notThat(soja3.parcelaIdeal())
+		assert.notThat(quinoa1.parcelaIdeal())
+		parcela1.retirar(soja3)
+		
+		parcela1.plantar(menta1)
+		assert.that(menta1.parcelaIdeal())		
+	}
+	
+	test "parcela2 es ideal para soja comun y transgenica" {
+		parcela2.plantar(soja3)
+		assert.that(soja3.parcelaIdeal())
+		parcela2.retirar(soja3)
+		
+		parcela2.plantar(sojaTrans)
+		assert.that(sojaTrans.parcelaIdeal())
+	}
+	
+	test "planta bien asociada con parcela ecologica" {
+		// que la parcela no tenga complicaciones y sea ideal para la planta 
+		parcela2.plantar(soja3)
+		assert.that(soja3.bienAsociada())
+		parcela2.retirar(soja3)
+		
+		parcela2.plantar(quinoa3)
+		assert.notThat(quinoa3.bienAsociada())
+	}
+
+	test "planta bien asociada con parcela industrial" {
+		//bien asociada si la planta es fuerte (tolerancia>10) y si no hay mas de 2 plantas en parcela
+		parcela1.plantar(quinoa1)
+		parcela1.plantar(quinoa2)
+		assert.that(quinoa1.bienAsociada())
+		parcela1.plantar(soja1)
+		assert.notThat(quinoa1.bienAsociada())
+		parcela1.retirar(quinoa1)
+		assert.notThat(soja1.bienAsociada())
+	}
+	
+	test "INTA: promedio de plantas por parcela" {
+		parcela1.plantar(quinoa1)
+		parcela1.plantar(quinoa2)
+		parcela1.plantar(quinoa3)
+		parcela1.plantar(soja1)
+		parcela2.plantar(sojaTrans)
+		
+		inta.agregarParcela(parcela1)
+		inta.agregarParcela(parcela2)
+		
+		assert.equals(inta.promedioPlantasPorParcela(),5/2)
+	}
+	
+	test "INTA: parcela mas autosustentable" {
+		
+
+		parcela3.plantar(menta3)
+		parcela3.plantar(menta4)
+		parcela3.plantar(menta5)
+		parcela3.plantar(menta6)
+		parcela3.plantar(menta7)
+		parcela3.plantar(menta8)
+		//6 bien asociadas
+		
+		parcela4.plantar(menta3)
+		parcela4.plantar(menta4)
+		parcela4.plantar(menta5)
+		parcela4.plantar(menta6)
+		parcela4.plantar(menta7)
+		//5 bien asociadas
+		
+		inta.agregarParcela(parcela3)
+		inta.agregarParcela(parcela4)
+		
+		assert.notThat(parcela3.tieneComplicaciones())
+		
+		assert.equals(6,parcela3.plantas().size())
+		assert.equals(6,parcela3.cantBienAsociadas())
+		assert.equals(5,parcela4.plantas().size())
+		assert.equals(5,parcela4.cantBienAsociadas())
+		assert.equals(parcela3, inta.masAutosustentable() )
+	}
+	
+}
